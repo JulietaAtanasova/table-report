@@ -1,0 +1,44 @@
+body {
+    background-color: rgb(18,151,147);
+}
+
+table {
+    border: 1px solid black;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+thead, tfoot {
+    font-weight: bold;
+}
+
+button {
+    border: none;
+    border-radius: 5px;
+    padding: 5px;
+    color: #505050;
+    font-weight: bold;
+    background-color: rgb(255,114,96);
+    font-size: 14px;
+}
+
+select {
+    background-color: rgb(255,245,195);
+    color: #505050;
+    font-weight: bold;
+}
+
+#wrapper {
+    max-width: 940px;
+    max-height: 90%;
+    margin: 20px auto;
+    padding: 20px;
+    border-radius: 15px;
+    background-color: rgb(255,245,195);
+}
+
+#menu {
+    width: 50%;
+    margin: 20px auto;
+    font-family: Tahoma, Helvetica, sans-serif;
+}
