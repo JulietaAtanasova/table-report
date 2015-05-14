@@ -7,11 +7,10 @@ xmlhttp.send();
 xmlhttp.onreadystatechange = function() {
     if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
         json = JSON.parse(xmlhttp.responseText);
-        console.log(json);
         drawCheckBoxes(json);
         drawTable(json['report']);
     } else {
-        console.log("Error reading json file", xmlhttp.statusText);
+        console.log("Error", xmlhttp.statusText);
     }
 };
 
@@ -35,7 +34,12 @@ function drawTable(arr) {
         out += '<td>' + arr[i]['class']['value'] +'</td>';
         out += '<td>' + arr[i]['absence']['value'] +'</td>';
         out += '<td>' + arr[i]['completedOn']['value'] +'</td>';
-        out += '<td>' + arr[i]['grade']['value'] +'</td>';
+        if(arr[i]['grade']['value'] === null){
+            out += '<td>' + 'no grade' +'</td>';
+        } else {
+            out += '<td>' + arr[i]['grade']['value'] +'</td>';
+        }
+
         newRow.innerHTML = out;
         document.getElementById("table").appendChild(newRow);
         absenceSum += Number( arr[i]['absence']['value']);
@@ -46,10 +50,12 @@ function drawTable(arr) {
     }
 
     averageGrade = gradeSum/gradeCount;
+    if(isNaN(averageGrade)){
+        averageGrade = 0;
+    }
     tableFooter = document.createElement('tfoot');
-    tableFooter.innerHTML = '<td></td><td>Total absence: </td><td>' +
-                             absenceSum + '</td><td>Average grade:</td><td>' +
-                             averageGrade.toFixed(2) + '</td>';
+    tableFooter.innerHTML = '<td></td><td>Total absence: </td><td>' + absenceSum +
+                            '</td><td>Average grade:</td><td>' + averageGrade.toFixed(2) + '</td>';
     document.getElementById("table").appendChild(tableFooter);
 }
 
@@ -64,34 +70,55 @@ function drawCheckBoxes(arr){
     showCategoryValues();
 }
 
-function sort(){
-    var categoriesBox = document.getElementById('categoriesBox');
-    var selectedCategory = categoriesBox.selectedOptions[0].value;
-    var valuesBox = document.getElementById('valuesBox');
-    var selectedValue = valuesBox.selectedOptions[0].value;
-    var filtredJSON = json['report'].filter(function(el){
-        console.log(selectedCategory);
-        return el[selectedCategory].value == selectedValue;
+function sortTable(){
+    var categoriesBox,
+        selectedCategory,
+        valuesBox,
+        selectedValue,
+        filtredJson;
+
+    categoriesBox = document.getElementById('categoriesBox');
+    selectedCategory = categoriesBox.selectedOptions[0].value;
+    valuesBox = document.getElementById('valuesBox');
+    selectedValue = valuesBox.selectedOptions[0].value;
+    filtredJson = json['report'].filter(function(el){
+        return String(el[selectedCategory].value) === selectedValue;
     });
     document.getElementById("table").innerHTML = '';
-    drawTable(filtredJSON);
+    drawTable(filtredJson);
 }
 
 function showCategoryValues(){
+    var categoriesBox,
+        selectedCategory,
+        existingValues = [];
+
     document.getElementById('valuesBox').innerHTML = '';
-    var categoriesBox = document.getElementById('categoriesBox');
-    var selectedCategory = categoriesBox.selectedOptions[0].value;
-    var existingValues = [];
+    categoriesBox = document.getElementById('categoriesBox');
+    selectedCategory = categoriesBox.selectedOptions[0].value;
 
     for(var i in json['report']){
         var value = json['report'][i][selectedCategory].value;
-        if(value && existingValues.indexOf(value) == -1 ) {
+        if(existingValues.indexOf(value) == -1 ) {
+            if(value === null){
+                existingValues.push(value);
+                value = 'no ' + selectedCategory;
+                var option = document.createElement('option');
+                option.innerHTML = value;
+                option.value = null;
+                document.getElementById('valuesBox').appendChild(option);
+                continue;
+            }
             existingValues.push(value);
             var newOption = document.createElement('option');
             newOption.innerHTML = value;
             newOption.value = value;
             document.getElementById('valuesBox').appendChild(newOption);
-            var box = document.getElementById('valuesBox');
         }
     }
+}
+
+function showTable(){
+    document.getElementById("table").innerHTML = '';
+    drawTable(json['report']);
 }
