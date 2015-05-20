@@ -1,18 +1,13 @@
-var url = "JSONData.txt";
-var json;
+var reports = [];
 
-var xmlhttp = new XMLHttpRequest();
-xmlhttp.open("GET", url, true);
-xmlhttp.send();
-xmlhttp.onreadystatechange = function() {
-    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-        json = JSON.parse(xmlhttp.responseText);
-        drawCheckBoxes(json);
-        drawTable(json['report']);
-    } else {
-        console.log("Error", xmlhttp.statusText);
-    }
-};
+for (var i in data['report']) {
+    var report = data['report'][i];
+    reports.push(new Report(report.name.value, report.class.value,
+        report.absence.value, report.completedOn.value,report.grade.value));
+}
+
+showTable(reports);
+drawCheckBoxes(reports);
 
 function drawTable(arr) {
     var absenceSum = 0,
@@ -27,24 +22,22 @@ function drawTable(arr) {
     tableHeader.innerHTML = '<td>Name</td><td>Class</td><td>Absence</td><td>Completed On</td><td>Grade</td>';
     document.getElementById("table").appendChild(tableHeader);
 
-    for(i = 0; i < arr.length; i++) {
+    for(i in arr) {
         var out = "";
         var newRow = document.createElement('tr');
-        out += '<td>' + arr[i]['name']['value'] +'</td>';
-        out += '<td>' + arr[i]['class']['value'] +'</td>';
-        out += '<td>' + arr[i]['absence']['value'] +'</td>';
-        out += '<td>' + arr[i]['completedOn']['value'] +'</td>';
-        if(arr[i]['grade']['value'] === null){
-            out += '<td>' + 'no grade' +'</td>';
-        } else {
-            out += '<td>' + arr[i]['grade']['value'] +'</td>';
+        for(var key in arr[i]){
+            if(arr[i][key] === null){
+                out += '<td>no ' + key +'</td>';
+            } else {
+                out += '<td>' + arr[i][key] + '</td>';
+            }
         }
 
         newRow.innerHTML = out;
         document.getElementById("table").appendChild(newRow);
-        absenceSum += Number( arr[i]['absence']['value']);
-        if(arr[i]['grade']['value'] !== null){
-            gradeSum += Number( arr[i]['grade']['value']);
+        absenceSum += Number( arr[i].absence);
+        if(arr[i].grade !== null){
+            gradeSum += Number( arr[i].grade);
             gradeCount++;
         }
     }
@@ -55,19 +48,13 @@ function drawTable(arr) {
     }
     tableFooter = document.createElement('tfoot');
     tableFooter.innerHTML = '<td></td><td>Total absence: </td><td>' + absenceSum +
-                            '</td><td>Average grade:</td><td>' + averageGrade.toFixed(2) + '</td>';
+        '</td><td>Average grade:</td><td>' + averageGrade.toFixed(2) + '</td>';
     document.getElementById("table").appendChild(tableFooter);
 }
 
-function drawCheckBoxes(arr){
-    var categories = Object.keys(arr['report'][0]);
-    for(var c in categories){
-        var option = document.createElement('option');
-        option.innerHTML = categories[c];
-        option.value = categories[c];
-        document.getElementById('categoriesBox').appendChild(option);
-    }
-    showCategoryValues();
+function showTable(){
+    document.getElementById("table").innerHTML = '';
+    drawTable(reports);
 }
 
 function sortTable(){
@@ -75,20 +62,31 @@ function sortTable(){
         selectedCategory,
         valuesBox,
         selectedValue,
-        filtredJson;
+        sortedReports;
 
     categoriesBox = document.getElementById('categoriesBox');
     selectedCategory = categoriesBox.selectedOptions[0].value;
     valuesBox = document.getElementById('valuesBox');
     selectedValue = valuesBox.selectedOptions[0].value;
-    filtredJson = json['report'].filter(function(el){
-        return String(el[selectedCategory].value) === selectedValue;
+    sortedReports = reports.filter(function(el){
+        return String(el[selectedCategory]) === selectedValue;
     });
     document.getElementById("table").innerHTML = '';
-    drawTable(filtredJson);
+    drawTable(sortedReports);
 }
 
-function showCategoryValues(){
+function drawCheckBoxes(arr){
+    var categories = Object.keys(arr[0]);
+    for(var c in categories){
+        var option = document.createElement('option');
+        option.innerHTML = categories[c];
+        option.value = categories[c];
+        document.getElementById('categoriesBox').appendChild(option);
+    }
+    showCategoryValues(arr);
+}
+
+function showCategoryValues() {
     var categoriesBox,
         selectedCategory,
         existingValues = [];
@@ -97,10 +95,10 @@ function showCategoryValues(){
     categoriesBox = document.getElementById('categoriesBox');
     selectedCategory = categoriesBox.selectedOptions[0].value;
 
-    for(var i in json['report']){
-        var value = json['report'][i][selectedCategory].value;
-        if(existingValues.indexOf(value) == -1 ) {
-            if(value === null){
+    for (var i in reports) {
+        var value = reports[i][selectedCategory];
+        if (existingValues.indexOf(value) == -1) {
+            if (value === null) {
                 existingValues.push(value);
                 value = 'no ' + selectedCategory;
                 var option = document.createElement('option');
@@ -116,9 +114,4 @@ function showCategoryValues(){
             document.getElementById('valuesBox').appendChild(newOption);
         }
     }
-}
-
-function showTable(){
-    document.getElementById("table").innerHTML = '';
-    drawTable(json['report']);
 }
